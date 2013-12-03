@@ -96,13 +96,18 @@ class PeerToPeer(object):
         self.msgdata = msg[1]
         self.msgdate = msg[2]
       
-      reply = raw_input('Reply to sender>')
+      clientsock.close()
+      print 'recv msg:', self.msgdata
+      # reply = raw_input('Reply to sender>')
       self.sendDataToPeer(host, LISTEN_PORT_OTHER)
     
   def sendDataToPeer(self, host, port):
-    if not self.peer_connected.has_key((host, port)):
-      self.peer_connected[(host, port)] = PeerConnection(host, port)
-    
+    # if not self.peer_connected.has_key((host, port)):
+    self.peer_connected[(host, port)] = PeerConnection(host, port)
+
+    for key in self.peer_connected:
+        print self.peer_connected[key].s.getpeername()[1]
+
     peerconn = self.peer_connected[(host, port)]
     if peerconn.connect:
       msg = raw_input('sending data>')
@@ -131,7 +136,7 @@ class PeerToPeer(object):
       # print '%s listening for connections' %self.port
       print 'Listening on ', LISTEN_PORT_SELF
       clientsock, clientaddr = s.accept()
-      t = threading.Thread(target = self.recieveHandler,
+      t = threading.Thread(target = self.receiveHandler,
                       args=[clientsock])
       t.start()
       
@@ -179,6 +184,3 @@ if __name__ == "__main__":
   w1.makePeerService()
   if not sys.argv[-1] == 'recv':
       w1.sendData(HOST, LISTEN_PORT_OTHER)
-
-    
-    
