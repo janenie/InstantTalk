@@ -94,7 +94,7 @@ class PeerToPeer(object):
     
   def makeSeverSocket(self, port):
     s = socket(AF_INET, SOCK_STREAM)
-    s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1 )
+    s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     s.bind( ( '', port ) )
     s.listen(5)
     return s
@@ -124,7 +124,7 @@ class PeerToPeer(object):
         print 'msgdata:', msgdata
         self.msg = msgdata
         msg = raw_input('Reply>')
-        self.sendDataToPeer(host, port, 'str', msg)
+        self.sendDataToPeer(host, LISTEN_PORT_OTHER, 'str', msg)
     except KeyboardInterrupt:
       raise
     
@@ -189,15 +189,10 @@ class PeerConnection(object):
     if clientsock == '':
         self.port = port
         self.host = host
-        try:
-          self.s = socket(AF_INET, SOCK_STREAM)
-          print 'connect socket is building'
-          self.s.connect((host, port))
-          self.connect = True
-        except error, (value, message):
-          if self.s:
-            self.s.close()
-          self.connect = False
+        self.s = socket(AF_INET, SOCK_STREAM)
+        print 'connect socket is building'
+        self.s.connect((host, port))
+        self.connect = True
     elif host == '' and port == '':
         self.s = clientsock
         self.connect = True
