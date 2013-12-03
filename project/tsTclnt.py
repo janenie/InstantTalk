@@ -3,10 +3,13 @@ import struct
 import threading
 from time import ctime
 import traceback
+import sys
+import random
 
-HOST = ''
-PORT = 21567
-ADDR = (HOST, PORT)
+HOST = '127.0.0.1'
+LISTEN_PORT_SELF = 12345
+LISTEN_PORT_OTHER = 54321
+# ADDR = (HOST, PORT)
 BUFSIZ = 1024
 
 class ClientProtocol(object):
@@ -81,11 +84,12 @@ class ClientProtocol(object):
 class PeerToPeer(object):
   def __init__(self, serverport, serverhost):
     self.shutdown = False
-    self.port = 21567
+    self.port = LISTEN_PORT_SELF
     self.host = ''
     self.serverport = serverport
     self.serverhost = serverhost
     self.peers = {}
+    self.peers_connected = {}
     self.peerLock = threading.Lock()
     
   def makeSeverSocket(self, port):
@@ -107,36 +111,48 @@ class PeerToPeer(object):
   
   def recieveHandler(self, clientsock):
     host, port = clientsock.getpeername()
-    peerconn = PeerConnection(host, port)
-    
+    print 'recieve from port', port
+    if not self.peers_connected.has_key(host):
+        print 'create PeerConnection...'
+        self.peers_connected[host] = PeerConnection(clientsock=clientsock)
+    peerconn = self.peers_connected[host]
+    assert peerconn.s == clientsock
+
     try:
       msgtype, msgdata = peerconn.recvData()
       if msgtype == "str":
-        print msgdata
+        print 'msgdata:', msgdata
         self.msg = msgdata
-        msg = raw_input('Input what you want>')
-        sendDataToPeer(host, port, 'str', msg)
+        msg = raw_input('Reply>')
+        self.sendDataToPeer(host, port, 'str', msg)
     except KeyboardInterrupt:
       raise
     
     return (msgtype, msgdata)
   
   def sendDataToPeer(self, server, port, mstype, msg):
-    print 'Sending...'
-    peerconn = PeerConnection(server, port)
+    if not self.peers_connected.has_key(server):
+        print 'create PeerConnection...'
+        self.peers_connected[server] = PeerConnection(host=server, port=port)
+    peerconn = self.peers_connected[server]
+
+    print 'Sending to', port
+
     #msgreply = []
     if peerconn.connect:
       peerconn.sendData(mstype, msg)
-      peerconn.close()
+      # peerconn.close()
     else:
       print 'Connections failed!'
-    
+    print 'Sent.'
+    t = threading.Thread(target = self.recieveHandler,
+                      args=[peerconn.s])
   
   def checkPeerAlive(self):
     todelete = []
     for host in self.peers.keys():
       port = self.peers[host]
-      peerconn = PeerConnection(host, port)
+      peerconn = PeerConnection(host=host, port=port)
       if peerconn.connect:
         pass
       else:
@@ -153,41 +169,47 @@ class PeerToPeer(object):
   
   
   def mainloop(self):
+    print 'mainloop'
     s = self.makeSeverSocket(self.port)
     
-    while not self.shutdown:
-      try:
-        print '%s listening for connections' %self.port
-        clientsock, clientaddr = s.accept()
-        
-        t = threading.Thread(target = self.recieveHandler,
+    # while not self.shutdown:
+    while True:
+      # print '%s listening for connections' %self.port
+      print 'Listening on ', LISTEN_PORT_SELF
+      clientsock, clientaddr = s.accept()
+      t = threading.Thread(target = self.recieveHandler,
                       args=[clientsock])
-        t.start()
-      except KeyboardInterrupt:
-        print 'KeyboardInterrupt terminated'
-        self.shutdown = True
+      t.start()
       
     
     s.close()
 
 class PeerConnection(object):
-  def __init__(self, host, port):
-    self.port = port
-    self.host = host
-    try:
-      self.s = socket(AF_INET, SOCK_STREAM)
-      print 'connect socket is building'
-      self.s.connect((host, port))
-      self.connect = True
-    except error, (value, message):
-      if self.s:
-        self.s.close()
-      self.connect = False
+  def __init__(self, clientsock='', host='', port=''):
+    if clientsock == '':
+        self.port = port
+        self.host = host
+        try:
+          self.s = socket(AF_INET, SOCK_STREAM)
+          print 'connect socket is building'
+          self.s.connect((host, port))
+          self.connect = True
+        except error, (value, message):
+          if self.s:
+            self.s.close()
+          self.connect = False
+    elif host == '' and port == '':
+        self.s = clientsock
+        self.connect = True
+    else:
+        print 'PANIC!'
   
   def recvData(self):
     msg = ''
+    print 'recieving data'
     if self.connect:
       msg = self.s.recv(BUFSIZ)
+    print 'recv msg:', msg
     
     data = msg.split('^^^')
     if len(data) == 3:
@@ -207,11 +229,7 @@ class PeerConnection(object):
     data.append(str(ctime()))
     sstr = '^^^'.join(data)
     
-    try:
-      self.s.send(sstr)
-    
-    except KeyboardInterrupt:
-      print 'Send failed!'
+    self.s.send(sstr)
   
   def close(self):
     self.s.close()
@@ -228,18 +246,16 @@ class ControlFactory(object):
   def sendData(self, host, port):
     self.peer.addPeer(host, port)
     msg = raw_input('input what you want>')
-    ret = self.peer.sendDataToPeer(host, port, 'str', msg)
-    print 'The returned message is %s'%ret
-    self.peer.checkPeerAlive()
+    self.peer.sendDataToPeer(host, port, 'str', msg)
+    # self.peer.checkPeerAlive()
 
 
 if __name__ == "__main__":
+  if not sys.argv[-1] == 'recv':
+    LISTEN_PORT_OTHER, LISTEN_PORT_SELF = LISTEN_PORT_SELF, LISTEN_PORT_OTHER
+
   w1 = ControlFactory("192.168.1.130", 21567)
   print "Here"
   w1.makePeerService()
-  w1.sendData('', 21567)
-  
-    
-  
-  
-    
+  if not sys.argv[-1] == 'recv':
+      w1.sendData(HOST, LISTEN_PORT_OTHER)
