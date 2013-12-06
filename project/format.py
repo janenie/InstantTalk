@@ -7,7 +7,7 @@ CODEC = "ascii"
 class Message(object):
     def __init__(self):
         self.msg_type = "handshake"
-        self.msg
+        self.msg = ''
     
     def handshakeMsg(self, hostname):
         self.msg = "MINET " + hostname + '\n'
