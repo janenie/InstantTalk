@@ -4,12 +4,10 @@ import threading
 from time import ctime
 import traceback
 import sys
-import random
-
 HOST = '127.0.0.1'
 LISTEN_PORT_SELF = 22345
 LISTEN_PORT_OTHER = 54321
-# ADDR = (HOST, PORT)
+ADDR = (HOST, PORT)
 BUFSIZ = 1024
 
 class ClientProtocol(object):
@@ -71,116 +69,117 @@ class ClientProtocol(object):
     
   def testConnected(self):
     return self.connected
-    
-class PeerToPeer(object):
-  def __init__(self):
-    self.port = LISTEN_PORT_SELF
-    self.host = HOST
-    self.peers = {}
-    self.peer_connected = {}
+
+
+# class PeerToPeer(object):
+#   def __init__(self):
+#     self.port = LISTEN_PORT_SELF
+#     self.host = HOST
+#     self.peers = {}
+#     self.peer_connected = {}
   
-  def makeSeverSocket(self, port):
-    s = socket(AF_INET, SOCK_STREAM)
-    s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-    s.bind( ( '', port ) )
-    s.listen(5)
-    return s
+#   def makeSeverSocket(self, port):
+#     s = socket(AF_INET, SOCK_STREAM)
+#     s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+#     s.bind( ( '', port ) )
+#     s.listen(5)
+#     return s
   
-  def receiveHandler(self, clientsock):
-    host, port = clientsock.getpeername()
-    if clientsock:
-      datas= clientsock.recv(BUFSIZ)
-      msg = datas.split('^^^')
-      if len(msg) == 3:
-        self.msgtype = msg[0]
-        self.msgdata = msg[1]
-        self.msgdate = msg[2]
+#   def receiveHandler(self, clientsock):
+#     host, port = clientsock.getpeername()
+#     if clientsock:
+#       datas= clientsock.recv(BUFSIZ)
+#       msg = datas.split('^^^')
+#       if len(msg) == 3:
+#         self.msgtype = msg[0]
+#         self.msgdata = msg[1]
+#         self.msgdate = msg[2]
       
-      clientsock.close()
-      print 'recv msg:', self.msgdata
-      # reply = raw_input('Reply to sender>')
-      self.sendDataToPeer(host, LISTEN_PORT_OTHER)
+#       clientsock.close()
+#       print 'recv msg:', self.msgdata
+#       # reply = raw_input('Reply to sender>')
+#       self.sendDataToPeer(host, LISTEN_PORT_OTHER)
     
-  def sendDataToPeer(self, host, port):
-    # if not self.peer_connected.has_key((host, port)):
-    self.peer_connected[(host, port)] = PeerConnection(host, port)
+#   def sendDataToPeer(self, host, port):
+#     # if not self.peer_connected.has_key((host, port)):
+#     self.peer_connected[(host, port)] = PeerConnection(host, port)
 
-    for key in self.peer_connected:
-        print self.peer_connected[key].s.getpeername()[1]
+#     for key in self.peer_connected:
+#         print self.peer_connected[key].s.getpeername()[1]
 
-    peerconn = self.peer_connected[(host, port)]
-    if peerconn.connect:
-      msg = raw_input('sending data>')
-      peerconn.sendData(msg)
+#     peerconn = self.peer_connected[(host, port)]
+#     if peerconn.connect:
+#       msg = raw_input('sending data>')
+#       peerconn.sendData(msg)
     
-    else:
-      print 'Connection failed'
+#     else:
+#       print 'Connection failed'
       
   
-  def addPeer(self, host, port):
-    if not self.peers.has_key(host):
-      self.peers[host] = port
-    else:
-      print 'The peer %s has already added!'%host
+#   def addPeer(self, host, port):
+#     if not self.peers.has_key(host):
+#       self.peers[host] = port
+#     else:
+#       print 'The peer %s has already added!'%host
     
-  def getPeer(self, host):
-    if self.peers.has_key(host):
-      return (host, self.peers[host])
+#   def getPeer(self, host):
+#     if self.peers.has_key(host):
+#       return (host, self.peers[host])
   
-  def mainloop(self):
-    print 'mainloop'
-    s = self.makeSeverSocket(self.port)
+#   def mainloop(self):
+#     print 'mainloop'
+#     s = self.makeSeverSocket(self.port)
     
-    # while not self.shutdown:
-    while True:
-      # print '%s listening for connections' %self.port
-      print 'Listening on ', LISTEN_PORT_SELF
-      clientsock, clientaddr = s.accept()
-      t = threading.Thread(target = self.receiveHandler,
-                      args=[clientsock])
-      t.start()
+#     # while not self.shutdown:
+#     while True:
+#       # print '%s listening for connections' %self.port
+#       print 'Listening on ', LISTEN_PORT_SELF
+#       clientsock, clientaddr = s.accept()
+#       t = threading.Thread(target = self.receiveHandler,
+#                       args=[clientsock])
+#       t.start()
       
-    s.close()
+#     s.close()
     
-class PeerConnection(object):
-  def __init__(self, host, port):
-    self.port = port
-    self.host = host
-    self.s = socket(AF_INET, SOCK_STREAM)
-    self.s.connect((host, port))
-    self.connect = True
+# class PeerConnection(object):
+#   def __init__(self, host, port):
+#     self.port = port
+#     self.host = host
+#     self.s = socket(AF_INET, SOCK_STREAM)
+#     self.s.connect((host, port))
+#     self.connect = True
   
-  def sendData(self, msg):
-    data = ['str', msg, ctime()]
-    s = '^^^'.join(data)
+#   def sendData(self, msg):
+#     data = ['str', msg, ctime()]
+#     s = '^^^'.join(data)
     
-    self.s.send(s)
+#     self.s.send(s)
   
-  def close(self):
-    self.s.close()
-    
-
-class ControlFactory(object):
-  def __init__(self):
-    self.peer = PeerToPeer()
-  
-  def makePeerService(self):
-    self.t = threading.Thread(target=self.peer.mainloop, args=[])
-    self.t.start()
-  
-  def sendData(self, host, port):
-    self.peer.addPeer(host, port)
-    msg = raw_input('input what you want>')
-    self.peer.sendDataToPeer(host, port)
-    # self.peer.checkPeerAlive()
+#   def close(self):
+#     self.s.close()
     
 
-if __name__ == "__main__":
-  if not sys.argv[-1] == 'recv':
-    LISTEN_PORT_OTHER, LISTEN_PORT_SELF = LISTEN_PORT_SELF, LISTEN_PORT_OTHER
+# class ControlFactory(object):
+#   def __init__(self):
+#     self.peer = PeerToPeer()
+  
+#   def makePeerService(self):
+#     self.t = threading.Thread(target=self.peer.mainloop, args=[])
+#     self.t.start()
+  
+#   def sendData(self, host, port):
+#     self.peer.addPeer(host, port)
+#     msg = raw_input('input what you want>')
+#     self.peer.sendDataToPeer(host, port)
+#     # self.peer.checkPeerAlive()
+    
 
-  w1 = ControlFactory()
-  print "Here"
-  w1.makePeerService()
-  if not sys.argv[-1] == 'recv':
-      w1.sendData(HOST, LISTEN_PORT_OTHER)
+# if __name__ == "__main__":
+#   if not sys.argv[-1] == 'recv':
+#     LISTEN_PORT_OTHER, LISTEN_PORT_SELF = LISTEN_PORT_SELF, LISTEN_PORT_OTHER
+
+#   w1 = ControlFactory()
+#   print "Here"
+#   w1.makePeerService()
+#   if not sys.argv[-1] == 'recv':
+#       w1.sendData(HOST, LISTEN_PORT_OTHER)
