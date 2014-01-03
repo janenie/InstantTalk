@@ -5,6 +5,8 @@ import thread
 from time import ctime, sleep
 from format import Message
 import sys
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 SERVER_HOST = ''
 SERVER_PORT = 54321
@@ -94,10 +96,11 @@ class ServerForCs(threading.Thread):
     
     def recvLogin(self, clientsock, lines):
         print 'LOGIN DEAL'
+        print "lines:", lines
         client_host, client_port = clientsock.getpeername()
         requestline = lines[0].split(' ')
         username = requestline[2]
-        port = (lines[1].split(' '))[1]
+        port = int((lines[1].split(' '))[1])
         #print username, port
         name_exsit = False
         status = '1'
@@ -109,7 +112,7 @@ class ServerForCs(threading.Thread):
             #print 'Process users infos'
             self.lock.acquire()
             self.users.add(username)
-            self.userinfos[(client_host, client_port)] = username
+            self.userinfos[(client_host, port)] = username
             self.lock.release()
             print 'Processed'
         

@@ -50,7 +50,7 @@ class ClientProtocolForCS(object):
         if types == "login":
             #print 'send!'
             username = data[0]
-            port = data[1] 
+            port = data[1]
             msg = self.msg.loginUserMsg(username, port)
             
         if types == "requestOnlineUsers":
@@ -68,7 +68,6 @@ class ClientProtocolForCS(object):
             msg = self.msg.sendBeatToServerMsg(data)
         
         if msg != '':
-            #print msg
             self.tcpCliSock.send(msg)
     
     def getMessage(self):
@@ -117,7 +116,7 @@ class ClientFactoryForCs(object):
         #print 'aaaaa'
         self.protocol.sendMessage("handshake") 
     
-    def sendTalkMsg(self, dialog):
+    def send_to_all(self, dialog):
         self.protocol.sendMessage("talkToAll",[self.username,dialog])
     
     def sendHeartbeatMsg(self):
@@ -131,6 +130,7 @@ class ClientFactoryForCs(object):
         self.protocol.sendMessage("leave", self.username)
     
     def sendLoginMsg(self, username):
+        print "self.port", self.port
         self.protocol.sendMessage("login", username)
     
     def keepAlive(self):
@@ -155,6 +155,7 @@ class ClientFactoryForCs(object):
     def userLogin(self, username):
         self.username = username
         #print "Here is the ",username 
+        print "self.port", self.port
         self.sendLoginMsg([username, self.port])
         #print "send!"
         msg = self.protocol.getMessage()
@@ -196,7 +197,7 @@ class ClientFactoryForCs(object):
          while self.protocol.connected:
             msg = raw_input( self.username + '>')
             if msg != '':
-                self.sendTalkMsg(msg)
+                self.send_to_all(msg)
             else :
                 print 'Empty msg, input again!'
             
