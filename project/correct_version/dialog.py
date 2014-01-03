@@ -25,14 +25,13 @@ class gridLayoutWindow(QtGui.QWidget):
         self.sendBtn = QtGui.QPushButton('send', self)
         self.sendBtn.resize(50, 30)
         btnGrid = QtGui.QGridLayout()
-        self.names_space = QtGui.QListWidget(self)
-        btnGrid.addWidget(names_space, 0, 1, 1, 3)
+        spaceGrid = QtGui.QHBoxLayout()
+        btnGrid.addLayout(spaceGrid, 0, 1, 1, 3)
         btnGrid.addWidget(self.sendBtn, 0, 4)
         
         self.sendBtn.clicked.connect(self.talkAndSend)
         
-        self.users = QtGui.QVBoxLayout()
-        self.users.setSpacing(10)
+        self.users = QtGui.QListWidget(self)
         self.onlineUserListControl()
         # usr1 = QtGui.QPushButton('jane', self)
         # usr2 = QtGui.QPushButton('jack', self)
@@ -40,10 +39,15 @@ class gridLayoutWindow(QtGui.QWidget):
         # self.users.addWidget(usr2)
         # self.users.addStretch(1)
             
-        grid.addWidget(self.dialog, 0, 0, 6, 3)
-        grid.addWidget(self.user_talk, 6, 0, 2, 3)
-        grid.addLayout(btnGrid, 9, 0, 1, 3)
-        grid.addLayout(self.users, 0, 4, 8, 1)
+        # grid.addWidget(self.dialog, 0, 0, 6, 1)
+        # grid.addWidget(self.user_talk, 6, 0, 2, 1)
+        # grid.addWidget(btnGrid, 9, 0, 1, 3)
+        # grid.addLayout(self.users, 0, 4, 8, 1)
+        self.users.setMaximumWidth(100)
+        grid.addWidget(self.users, 0, 1, 8, 1)
+        grid.addWidget(self.dialog, 0, 0, 6, 1)
+        grid.addWidget(self.user_talk, 6, 0, 2, 1)
+        grid.addLayout(btnGrid, 9, 0, 1, 1)
         
         self.setLayout(grid)
         self.resize(700, 500)
@@ -67,11 +71,10 @@ class gridLayoutWindow(QtGui.QWidget):
         #self.users.clear()
         for name in self.otherusers.keys():
             print 'refreshUserList: {}'.format(name)
-            item = QtGui.QListWidgetItem()
-            item.setText(name)
+            item = QtGui.QListWidgetItem(name)
             self.users.addItem(item)
         
-        self.users.addStretch(1)
+        #self.users.addStretch(1)
     
     def onlineUserListControl(self):
         self.getUsernames()
@@ -84,7 +87,7 @@ class gridLayoutWindow(QtGui.QWidget):
                 content = self.client.getRecentDialog()
                 self.showDialogContent(content)
             else:
-                self.onlineUserListControl()
+                #self.onlineUserListControl()
                 pass
     
     def center(self):   

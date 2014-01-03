@@ -9,10 +9,10 @@ import random
 import traceback
 
 HOST = '127.0.0.1'
-PORT = 55455
+PORT = 54321
 ADDR = (HOST, PORT)
 CLIENTPORT = 22345
-BUFSIZ = 1024
+BUFSIZ = 2048
 
 class ClientProtocolForCS(object):
     '''Sending message to server'''
@@ -27,6 +27,7 @@ class ClientProtocolForCS(object):
     def makeConnection(self):
         try:
             self.tcpCliSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.tcpCliSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.tcpCliSock.connect(ADDR)
             self.connected = True
         except socket.error, (value, message):
@@ -44,9 +45,10 @@ class ClientProtocolForCS(object):
         #print "passed type is ", types
         if types == "handshake":
             msg = self.msg.handshakeMsg(self.host)
-            print "here ", msg
+            #print "here ", msg
             
         if types == "login":
+            #print 'send!'
             username = data[0]
             port = data[1] 
             msg = self.msg.loginUserMsg(username, port)
@@ -66,6 +68,7 @@ class ClientProtocolForCS(object):
             msg = self.msg.sendBeatToServerMsg(data)
         
         if msg != '':
+            #print msg
             self.tcpCliSock.send(msg)
     
     def getMessage(self):
@@ -73,6 +76,7 @@ class ClientProtocolForCS(object):
         lines = data.split('\n')
         requestline = lines[0].split(' ')
         ret_msg = ''
+        #print 'Recieved'
         #judge type
         if 'MINET' in requestline:
             self.handshaked = True
@@ -107,6 +111,7 @@ class ClientFactoryForCs(object):
         self.username = ''
         self.onlineUsers = []
         self.dialogs = []
+        self.lastTalke = ''
     
     def sendHandshakeMsg(self):
         #print 'aaaaa'
@@ -129,11 +134,11 @@ class ClientFactoryForCs(object):
         self.protocol.sendMessage("login", username)
     
     def keepAlive(self):
-        sleep(2)
+        sleep(10)
         while self.protocol.connected:
             self.sendHeartbeatMsg()
-            sleep(2)
-    
+            sleep(10)
+            #self.sendRequestOnlineUserMsg()
     #run the program at the very start
     #ensure the net is connected
     def startApplication(self):
@@ -149,8 +154,11 @@ class ClientFactoryForCs(object):
     
     def userLogin(self, username):
         self.username = username
+        #print "Here is the ",username 
         self.sendLoginMsg([username, self.port])
+        #print "send!"
         msg = self.protocol.getMessage()
+        #print "recieved! ", msg 
         ret_msg = False
         if msg == "loginTrue":
             print "login Successed!!!"
@@ -161,21 +169,36 @@ class ClientFactoryForCs(object):
     
     def userGetDialogs(self):
         while self.protocol.connected:
-            recv = self.protocol.getMessage().split('\n')
-            dialog = ''
-            if recv[0] == "messageGetTrue":
-                dialog = recv[2] + ' ' + recv[1] + '\n' + recv[3]
-                print dialog
-                self.dialogs.append(dialog)
+            self.getMessage()
+        
+    def getMessage(self):
+        recv = self.protocol.getMessage().split('\n')
+        if recv[0] == "messageGetTrue":
+            dialog = recv[2] + ' ' + recv[1] + '\n' + recv[3]
+            print dialog
+            self.dialogs.append(dialog)
+            self.lastTalke = dialog
+            return "talk"
+        else:
+            if recv[0] == "userlistTrue":
+                self.updateUsers(recv)
+                print self.getOnlineUsers()
+            return "userlist"
     
+    def getRecentDialog(self):
+        return self.lastTalke
+    
+    def updateUsers(self, data):
+        userinfos = data[1:]
+        self.onlineUsers = userinfos
+        
     def userTalking(self):
-        while self.protocol.connected:
+         while self.protocol.connected:
             msg = raw_input( self.username + '>')
             if msg != '':
                 self.sendTalkMsg(msg)
-            else:
-                print 'Empty cannot be sent'
-                msg = raw_input(self.username + '>')
+            else :
+                print 'Empty msg, input again!'
             
     def userEnterTalkingRoom(self):
         #first thing when entring room, sleep and wakeup
@@ -185,19 +208,28 @@ class ClientFactoryForCs(object):
         self.sendRequestOnlineUserMsg()
         data = self.protocol.getMessage().split('\n')
         userinfos = []
-        if "userlistTrue" in data:
-            userinfos = data[1:]
-            self.onlineUsers = userinfos
-            print userinfos
+        self.updateUsers(data)
+        print self.onlineUsers
         #third thing is recieving the message
-        self.recving = threading.Thread(
-            target=self.userGetDialogs)
-        #finally speak
-        self.talking = threading.Thread(
-            target=self.userTalking)
-        self.recving.start()
-        self.talking.start()
+        # self.recving = threading.Thread(
+        #     target=self.userGetDialogs)
+        # #finally speak
+        # self.talking = threading.Thread(
+        #     target=self.userTalking)
+        # self.recving.start()
+        # self.talking.start()
         
+    def getOnlineUsers(self):
+        names = []
+        for i in self.onlineUsers:
+            name = i.split(' ')
+            if self.username == name[0]:
+                continue
+            print i
+            names.append(i)
+        #print names
+        return names
+    
     def leaveApplication(self):
         self.sendLeaveMsg()
         self.protocol.lostConnection()
@@ -205,15 +237,15 @@ class ClientFactoryForCs(object):
         thread.exit_thread()
         
 
-def main():
-    port = random.randint(40000, 50000)
-    cli = ClientFactoryForCs(port)
-    connect = cli.startApplication()
-    print connect 
-    if connect:
-        username = raw_input('any username you want>')
-        if cli.userLogin(username):
-            cli.userEnterTalkingRoom()
+# def main():
+#     port = random.randint(40000, 50000)
+#     cli = ClientFactoryForCs(port)
+#     connect = cli.startApplication()
+#     print connect 
+#     if connect:
+#         username = raw_input('any username you want>')
+#         if cli.userLogin(username):
+#             cli.userEnterTalkingRoom()
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()

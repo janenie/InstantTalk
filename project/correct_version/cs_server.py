@@ -7,7 +7,7 @@ from format import Message
 import sys
 
 SERVER_HOST = ''
-SERVER_PORT = 55455
+SERVER_PORT = 54321
 ADDR = (SERVER_HOST, SERVER_PORT)
 BUFSIZ = 2048
 
@@ -113,6 +113,7 @@ class ServerForCs(threading.Thread):
             status = '0'
             reason = 'username already exist'
         print status, reason
+        print 'Status'
         self.sendMessageToAClient(clientsock, "loginJudge", [status, reason])
         thread.exit_thread()
     
@@ -126,7 +127,16 @@ class ServerForCs(threading.Thread):
         thread.exit_thread()
     
     def recvLeave(self, clientsock):
-        pass
+        client_host, client_port = clientsock.getpeername()
+        if (client_host, client_port) in self.userinfos.keys():
+            self.lock.acquire()
+            name = self.userinfos[(client_host, client_port)]
+            del self.userinfos[(client_host, client_port)]
+            self.users.remove(name)
+            self.lock.release
+        else:
+            print 'Error user!'
+        thread.exit_thread()
     
     def recvMessage(self, clientsock, lines):
         #lines = clientsock.recv(BUFSIZ).split('\n')
@@ -155,6 +165,12 @@ class ServerForCs(threading.Thread):
             msg = clientsock.recv(BUFSIZ)
             lines = msg.split('\n')
             requestline = lines[0].split(' ')
+            print lines[0]
+            #print 'test' + repr(requestline)
+            if 'MINET' in requestline:
+                print 'Yes'
+            else :
+                print 'No'
             if msg != '':
                 print 'Received message from ', client_host, client_port
                 #judge type
@@ -163,6 +179,7 @@ class ServerForCs(threading.Thread):
                     t = threading.Thread(target=self.recvHandshake, args=[clientsock])
                     t.start()
                 if 'LOGIN' in requestline:
+                    print 'GOT LOGIN'
                     t = threading.Thread(target=self.recvLogin, args=[clientsock, lines])
                     t.start()
                 if 'GETLIST' in requestline:
@@ -178,8 +195,11 @@ class ServerForCs(threading.Thread):
                     t = threading.Thread(target=self.recvLeave, args=[clientsock])
                     t.start()
                     thread.exit_thread()
+                
             else:
-                print 'No useful information recieved'
+                t = threading.Thread(target=self.recvLeave, args=[clientsock])
+                t.start()
+                thread.exit_thread()
 
     def kill(self):
         self.running = 0
