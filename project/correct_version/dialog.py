@@ -60,6 +60,7 @@ class gridLayoutWindow(QtGui.QWidget):
         self.update = threading.Thread(target=self.updateDialogs)
         self.update.start()
         #self.show() 
+
     def getUsernames(self):
         names = self.client.getOnlineUsers()
         print 'getUsernames: {}'.format(names)
@@ -87,8 +88,7 @@ class gridLayoutWindow(QtGui.QWidget):
                 content = self.client.getRecentDialog()
                 self.showDialogContent(content)
             else:
-                #self.onlineUserListControl()
-                pass
+                self.onlineUserListControl()
     
     def center(self):   
         qr = self.frameGeometry()
