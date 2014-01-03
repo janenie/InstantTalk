@@ -69,6 +69,7 @@ class gridLayoutWindow(QtGui.QWidget):
     
     def refreshUserList(self):
         #self.users.clear()
+        self.users.clear()
         for name in self.otherusers.keys():
             print 'refreshUserList: {}'.format(name)
             item = QtGui.QListWidgetItem(name)
@@ -87,7 +88,7 @@ class gridLayoutWindow(QtGui.QWidget):
                 content = self.client.getRecentDialog()
                 self.showDialogContent(content)
             else:
-                #self.onlineUserListControl()
+                self.onlineUserListControl()
                 pass
     
     def center(self):   
