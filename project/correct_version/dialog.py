@@ -7,7 +7,9 @@ from time import ctime, time
 import threading
 import thread
 
-class gridLayoutWindow(QtGui.QWidget):
+class gridLayoutWindow(QtGui.QWidget, QtCore.QObject):
+    newMsgSignal = QtCore.pyqtSignal(str)
+
     def __init__(self, client, parent):
         super(gridLayoutWindow, self).__init__()
         self.client = client
@@ -58,8 +60,10 @@ class gridLayoutWindow(QtGui.QWidget):
         p.setColor(self.backgroundRole(), QtGui.QColor('white'))
         
         self.update = threading.Thread(target=self.updateDialogs)
+        self.newMsgSignal.connect(self.showDialogContent)
         self.update.start()
         #self.show() 
+
     def getUsernames(self):
         names = self.client.getOnlineUsers()
         print 'getUsernames: {}'.format(names)
@@ -86,10 +90,10 @@ class gridLayoutWindow(QtGui.QWidget):
             s = self.client.getMessage()
             if s == "talk":
                 content = self.client.getRecentDialog()
-                self.showDialogContent(content)
+                # self.showDialogContent(content)
+                self.newMsgSignal.emit(content)
             else:
                 self.onlineUserListControl()
-                pass
     
     def center(self):   
         qr = self.frameGeometry()
@@ -97,10 +101,22 @@ class gridLayoutWindow(QtGui.QWidget):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
     
+    def generateIcon(self, info):
+        pixmap = QtGui.QPixmap(20, 20)
+        user = info.split("\n")[0].split(" ")[-1]
+        print "user:", user
+        color = QtGui.QColor(hash(user)%255,
+            (hash(user)/2)%255,
+            (hash(user)/3)%255,
+            255)
+        pixmap.fill(color)
+        icon = QtGui.QIcon(pixmap)
+        return icon
+
     def showDialogContent(self, info):
         item = QtGui.QListWidgetItem()
         item.setText(info)
-        item.setIcon(QtGui.QIcon('user.png'))
+        item.setIcon(self.generateIcon(info))
         self.dialog.addItem(item)
     
     def talkAndSend(self):
