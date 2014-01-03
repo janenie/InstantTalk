@@ -98,16 +98,20 @@ class ServerForCs(threading.Thread):
         requestline = lines[0].split(' ')
         username = requestline[2]
         port = (lines[1].split(' '))[1]
+        #print username, port
         name_exsit = False
         status = '1'
         reason = 'success'
+        print self.userinfos
         if username in self.users:
             name_exsit = True
         else:
+            #print 'Process users infos'
             self.lock.acquire()
             self.users.add(username)
             self.userinfos[(client_host, client_port)] = username
             self.lock.release()
+            print 'Processed'
         
         if name_exsit == True:
             status = '0'
@@ -133,7 +137,7 @@ class ServerForCs(threading.Thread):
             name = self.userinfos[(client_host, client_port)]
             del self.userinfos[(client_host, client_port)]
             self.users.remove(name)
-            self.lock.release
+            self.lock.release()
         else:
             print 'Error user!'
         thread.exit_thread()

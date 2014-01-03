@@ -36,7 +36,7 @@ class ClientProtocolForCS(object):
             self.connected = False
     
     def lostConnection(self):
-        if self.connect == True:
+        if self.connected == True:
             self.tcpCliSock.close()
     
     def sendMessage(self, types, data = None):
@@ -62,7 +62,7 @@ class ClientProtocolForCS(object):
             msg = self.msg.userTalkToAllMsg(username, dialog)
         
         if types == "leave":
-            msg = self.msg.userLeaveMsg()
+            msg = self.msg.userLeaveMsg(data)
         
         if types == "beat":
             msg = self.msg.sendBeatToServerMsg(data)
@@ -128,7 +128,7 @@ class ClientFactoryForCs(object):
         self.protocol.sendMessage("requestOnlineUsers")
     
     def sendLeaveMsg(self):
-        self.protocol.sendMessage("leave")
+        self.protocol.sendMessage("leave", self.username)
     
     def sendLoginMsg(self, username):
         self.protocol.sendMessage("login", username)
@@ -234,7 +234,8 @@ class ClientFactoryForCs(object):
         self.sendLeaveMsg()
         self.protocol.lostConnection()
         self.protocol.connected = False
-        thread.exit_thread()
+        print 'Lost connection!'
+        #thread.exit_thread()
         
 
 # def main():

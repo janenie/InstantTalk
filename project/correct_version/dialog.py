@@ -11,12 +11,12 @@ class gridLayoutWindow(QtGui.QWidget, QtCore.QObject):
     newMsgSignal = QtCore.pyqtSignal(str)
 
     def __init__(self, client, parent):
-        super(gridLayoutWindow, self).__init__(parent)
+        super(gridLayoutWindow, self).__init__()
         self.client = client
         self.client.userEnterTalkingRoom()
         self.otherusers = {}
         self.getUi()
-        #self.parent = parent
+        self.parent = parent
         
     def getUi(self):
         grid = QtGui.QGridLayout()
@@ -125,6 +125,15 @@ class gridLayoutWindow(QtGui.QWidget, QtCore.QObject):
         info = str(s)
         self.client.sendTalkMsg(info)
         self.user_talk.clear()
+    
+    def closeEvent(self, event):
+        self.client.leaveApplication()
+        print 'Already Leave'
+        event.accept()
+        #self.exit()
+        self.update.exit_thread()
+        print self.parent
+        self.parent.close()
 
 # def main():
   

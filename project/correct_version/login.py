@@ -75,7 +75,7 @@ class LoginWindow(QtGui.QWidget):
         print self.login 
         if self.login:
           self.hide()
-          self.talk = gridLayoutWindow(self.client, None)
+          self.talk = gridLayoutWindow(self.client, self)
           #self.client.userEnterTalkingRoom()
           self.talk.show()
         else:
@@ -87,6 +87,7 @@ class LoginWindow(QtGui.QWidget):
 def main():
   app = QtGui.QApplication(sys.argv)
   w = LoginWindow()
+  print "Here"
   sys.exit(app.exec_())
   
 if __name__ == '__main__':
