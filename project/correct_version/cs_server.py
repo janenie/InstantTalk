@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#_*_coding:utf-8 _*_
 import socket
 import threading
 import thread
@@ -88,6 +89,7 @@ class ServerForCs(threading.Thread):
             self.users.remove(username)
             del self.userinfos[(client_host, client_port)]
             self.lock.release()
+        thread.exit_thread()
     #将接收到的信息根据协议分类
     def recvHandshake(self, clientsock):
         #print 'Here'

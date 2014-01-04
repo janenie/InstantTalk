@@ -125,6 +125,7 @@ class gridLayoutWindow(QtGui.QWidget, QtCore.QObject):
             s = self.client.getMessage()
             if s == "talk":
                 content = self.client.getRecentDialog()
+                print "Content:", content, type(content)
                 self.newMsgSignal.emit(content)
             else:
                 self.onlineUserListControl()
@@ -150,7 +151,7 @@ class gridLayoutWindow(QtGui.QWidget, QtCore.QObject):
         pixmap.fill(color)
         icon = QtGui.QIcon(pixmap)
         return icon
-    #添加一个私聊的窗口
+    #添加一个私聊的信息
     def insert_single_chat(self, info):
         item = QtGui.QListWidgetItem()
         item.setText(info)
@@ -158,12 +159,25 @@ class gridLayoutWindow(QtGui.QWidget, QtCore.QObject):
         self.dialog.addItem(item)
     #用于切换窗口间的信息显示
     def show_msg(self, info):
-        user = self.currentChat
+        #user = self.currentChat
+        #print info, type(info)
+        info = str(info)
+        infos = info.split('\n')
+        info = infos[0] + '\n' + infos[1]
+        if len(infos) != 3:
+            user = 'Group Chat'
+        else:
+            user = infos[0].split()[-1]
         if user not in self.chatHistory:
             assert type(user) == str
             self.chatHistory[user] = []
-
-        self.chatHistory[user].append(info)
+        
+        print "self.client.username={}, self.currentChat={}, user={}".format(self.client.username, self.currentChat, user)
+        if self.client.username == user:
+            self.chatHistory[self.currentChat].append(info)
+        else:
+            self.chatHistory[user].append(info)
+            
         if self.currentChat == user:
             self.insert_single_chat(info)
         else:
@@ -193,7 +207,7 @@ class gridLayoutWindow(QtGui.QWidget, QtCore.QObject):
         else:
             host, port = self.peers[name]
             self.chatClient.send(msg, name, host, int(port))
-            info = ctime()+" "+self.client.username+"\n"+msg
+            info = ctime()+" "+self.client.username+"\n"+msg+'\n'+'pri'
             self.newMsgSignal.emit(info)
         self.user_talk.clear()
     #关闭窗口事件处理

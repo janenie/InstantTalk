@@ -1,5 +1,5 @@
 #!usr/bin/env python
-
+#_*_coding:utf-8 _*_
 import socket
 import threading
 import select
@@ -40,7 +40,7 @@ class Chat_Server(threading.Thread):
                 time_cur = lines[1].split('HEADERNAME ')[1]
                 print user, time_cur
                 print dialog
-                info = time_cur+' '+user+'\n'+dialog
+                info = time_cur+' '+user+'\n'+dialog + '\n' + 'pri'
                 self.newMsgSignal.emit(info)
                 self.dialog.append(time_cur+' '+user+'\n'+dialog)
             # else:
