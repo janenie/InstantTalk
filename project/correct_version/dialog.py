@@ -172,7 +172,7 @@ class gridLayoutWindow(QtGui.QWidget, QtCore.QObject):
             assert type(user) == str
             self.chatHistory[user] = []
         
-        print "self.client.username={}, self.currentChat={}, user={}".format(self.client.username, self.currentChat, user)
+       # print "self.client.username={}, self.currentChat={}, user={}".format(self.client.username, self.currentChat, user)
         if self.client.username == user:
             self.chatHistory[self.currentChat].append(info)
         else:
@@ -191,7 +191,9 @@ class gridLayoutWindow(QtGui.QWidget, QtCore.QObject):
 
         print "history:"
         print self.chatHistory
-
+        
+        infos = str(info).split('\n')
+        info = infos[0] + '\n' + infos[1]
         self.chatHistory[user].append(info)
         if self.currentChat == user:
             self.insert_single_chat(info)
