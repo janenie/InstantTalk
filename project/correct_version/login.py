@@ -15,7 +15,7 @@ class LoginWindow(QtGui.QWidget):
     self.port = random.randint(10000, 40000)
     self.client = ClientFactoryForCs(self.port)
     self.initUI()
-  
+  #登录窗口初始化
   def initUI(self):
     
     
@@ -55,12 +55,12 @@ class LoginWindow(QtGui.QWidget):
     cp = QtGui.QDesktopWidget().availableGeometry().center()
     qr.moveCenter(cp)
     self.move(qr.topLeft())
-  
+  #提示的窗口
   def showHint(self, s):
     QtGui.QMessageBox.question(self, 'Message',
         s, QtGui.QMessageBox.Yes |
         QtGui.QMessageBox.No, QtGui.QMessageBox.No)
-    
+  #发送登录信息进入聊天窗口
   def sendData(self):
     s = self.userEdit.text()
     self.connect = self.client.startApplication()

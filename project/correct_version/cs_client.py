@@ -111,7 +111,7 @@ class ClientFactoryForCs(object):
         self.onlineUsers = []
         self.dialogs = []
         self.lastTalke = ''
-    
+    #发送消息给服务器，一下为封装好的函数
     def sendHandshakeMsg(self):
         #print 'aaaaa'
         self.protocol.sendMessage("handshake") 
@@ -132,7 +132,7 @@ class ClientFactoryForCs(object):
     def sendLoginMsg(self, username):
         print "self.port", self.port
         self.protocol.sendMessage("login", username)
-    
+    #发送心跳给服务器
     def keepAlive(self):
         sleep(10)
         while self.protocol.connected:
@@ -151,7 +151,7 @@ class ClientFactoryForCs(object):
             if msg == "handshakeTrue":
                 connect = True
         return connect
-    
+    #用户进行登陆请求
     def userLogin(self, username):
         self.username = username
         #print "Here is the ",username 
@@ -167,11 +167,11 @@ class ClientFactoryForCs(object):
         else:
             print "login failed!!!Change a name"
         return ret_msg
-    
+    #用户请求聊天的内容
     def userGetDialogs(self):
         while self.protocol.connected:
             self.getMessage()
-        
+    
     def getMessage(self):
         recv = self.protocol.getMessage().split('\n')
         if recv[0] == "messageGetTrue":
@@ -185,14 +185,14 @@ class ClientFactoryForCs(object):
                 self.updateUsers(recv)
                 print self.getOnlineUsers()
             return "userlist"
-    
+    #返回最近聊天的内容
     def getRecentDialog(self):
         return self.lastTalke
-    
+    #服务器返回回来的最新在线用户列表
     def updateUsers(self, data):
         userinfos = data[1:]
         self.onlineUsers = userinfos
-        
+    #用户发送说话请求
     def userTalking(self):
          while self.protocol.connected:
             msg = raw_input( self.username + '>')
@@ -200,7 +200,7 @@ class ClientFactoryForCs(object):
                 self.send_to_all(msg)
             else :
                 print 'Empty msg, input again!'
-            
+    #进入聊天室的时候初始的内容
     def userEnterTalkingRoom(self):
         #first thing when entring room, sleep and wakeup
         self.heartbeat = threading.Thread(target=self.keepAlive)
@@ -219,7 +219,7 @@ class ClientFactoryForCs(object):
         #     target=self.userTalking)
         # self.recving.start()
         # self.talking.start()
-        
+    #返回在线用户名单给到界面窗口
     def getOnlineUsers(self):
         names = []
         for i in self.onlineUsers:
@@ -230,7 +230,7 @@ class ClientFactoryForCs(object):
             names.append(i)
         #print names
         return names
-    
+    #离开此应用清理信息
     def leaveApplication(self):
         self.sendLeaveMsg()
         self.protocol.lostConnection()

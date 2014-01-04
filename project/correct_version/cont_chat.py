@@ -43,8 +43,8 @@ class Chat_Server(threading.Thread):
                 info = time_cur+' '+user+'\n'+dialog
                 self.newMsgSignal.emit(info)
                 self.dialog.append(time_cur+' '+user+'\n'+dialog)
-            else:
-                print 'Wrong Message Recieved'
+            # else:
+            #     print 'Wrong Message Recieved'
 
     def retrieve_msg(self):
         if self.dialog != []:
@@ -86,10 +86,10 @@ class Chat_Client(threading.Thread):
         self.running = 0
 
 
-if __name__ == "__main__":
-    port = random.randint(10000, 60000)
-    print "Port:", port
-    chat_server = Chat_Server(port)
-    chat_client = Chat_Client('jane')
-    chat_server.start()
-    chat_client.start()
+# if __name__ == "__main__":
+#     port = random.randint(10000, 60000)
+#     print "Port:", port
+#     chat_server = Chat_Server(port)
+#     chat_client = Chat_Client('jane')
+#     chat_server.start()
+#     chat_client.start()

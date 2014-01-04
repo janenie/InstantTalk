@@ -12,7 +12,7 @@ SERVER_HOST = ''
 SERVER_PORT = 54321
 ADDR = (SERVER_HOST, SERVER_PORT)
 BUFSIZ = 2048
-
+#服务器为一个主线程
 class ServerForCs(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
@@ -25,7 +25,7 @@ class ServerForCs(threading.Thread):
         self.running = 1
         self.lock = threading.Lock()
         self.threads = {}
-
+    #主线程对每个用户开启一个接受消息的监听线程
     def run(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1)
@@ -46,7 +46,7 @@ class ServerForCs(threading.Thread):
             #t2.start()
             t.start()
             #t2.start()
-    
+    #服务器给一个用户发送消息
     def sendMessageToAClient(self, clientsock, types, data= None):
         msg = ''
         if types == "handshake":
@@ -69,16 +69,16 @@ class ServerForCs(threading.Thread):
         if msg != '':
             clientsock.send(msg)
         #Thread.exit_thread()
-        
+    #检查在线用户
     def checkAliveUsers(self, client_host, client_port):
         pass
-    
+    #给所有用户发送聊天信息
     def sendMessageToAllClient(self, username, msg):
-        print self.threads
+        #print self.threads
         for clientsock in self.threads.keys():
             self.sendMessageToAClient(clientsock, "dialogReturn", [username, msg])
         thread.exit_thread()
-    
+    #清理用户消息
     def removeAliveClient(self, clientsock):
         client_host, client_port = clientsock.getpeername()
         if self.threads.has_key(clientsock):
@@ -88,15 +88,15 @@ class ServerForCs(threading.Thread):
             self.users.remove(username)
             del self.userinfos[(client_host, client_port)]
             self.lock.release()
-    
+    #将接收到的信息根据协议分类
     def recvHandshake(self, clientsock):
-        print 'Here'
+        #print 'Here'
         self.sendMessageToAClient(clientsock, "handshake")
         thread.exit_thread()
     
     def recvLogin(self, clientsock, lines):
         print 'LOGIN DEAL'
-        print "lines:", lines
+        #print "lines:", lines
         client_host, client_port = clientsock.getpeername()
         requestline = lines[0].split(' ')
         username = requestline[2]
@@ -105,7 +105,7 @@ class ServerForCs(threading.Thread):
         name_exsit = False
         status = '1'
         reason = 'success'
-        print self.userinfos
+        #print self.userinfos
         if username in self.users:
             name_exsit = True
         else:
@@ -149,7 +149,7 @@ class ServerForCs(threading.Thread):
         #lines = clientsock.recv(BUFSIZ).split('\n')
         requestline = lines[0].split(' ')
         msg = lines[3]
-        print msg
+        #print msg
         username = requestline[2]
         #time = (lines[1].split('HEADERNAME '))[1]
         self.sendMessageToAllClient(username, msg)
@@ -165,14 +165,14 @@ class ServerForCs(threading.Thread):
         self.sendMessageToAClient(clientsock, "onlineUserList", userinfos)
         thread.exit_thread()
             #self.checkAliveUsers(client_host, client_port)userinfos = {}
-
+    #对每一个用户进行监听的接收函数，通过判断发送的协议类型调用不同的处理函数
     def recv(self, clientsock):
         while True:
             client_host, client_port = clientsock.getpeername()
             msg = clientsock.recv(BUFSIZ)
             lines = msg.split('\n')
             requestline = lines[0].split(' ')
-            print lines[0]
+           # print lines[0]
             #print 'test' + repr(requestline)
             if 'MINET' in requestline:
                 print 'Yes'
